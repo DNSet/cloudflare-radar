@@ -39,7 +39,10 @@ def run_cmd_update_rankings(cmds: commands) -> int:
         queue.put(domain_ranking(country))
     while not queue.empty():
         object = queue.get(block=False)
-        if not object.download(dir) and retries > 0:
-            queue.put(object)
-            retries -= 1
+        if not object.download(dir):
+            if retries > 0:
+                queue.put(object)
+                retries -= 1
+            continue
+        cmds.logger.info([i for i in object])
     return 0
