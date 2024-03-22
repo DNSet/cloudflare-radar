@@ -9,5 +9,6 @@ from .attribute import __url_code__
 from .attribute import __url_docs__
 from .attribute import __url_home__
 from .attribute import __version__
+from .domains import domain_database
 from .ranking import domain_ranking
 from .request import download

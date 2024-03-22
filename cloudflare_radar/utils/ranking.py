@@ -10,7 +10,7 @@ from xarg import commands
 from .request import download
 
 
-class domain_ranking(list):
+class domain_ranking(list[str]):
     PREFIX = "http://radar.cloudflare.com/charts/TopDomainsTable"
 
     def __init__(self, location: Optional[Country] = None):
@@ -38,5 +38,5 @@ class domain_ranking(list):
     def download(self, path: str) -> bool:
         filepath: Optional[str] = download(url=self.url, path=path)
         status: str = "success" if isinstance(filepath, str) else "failed"
-        commands().logger.info(f"download {self.url} {status}")
+        commands().logger.debug(f"download {self.url} {status}")
         return self.load(filepath) if isinstance(filepath, str) else False
