@@ -28,9 +28,10 @@ def add_cmd_update_rankings(_arg: argp):
 @run_command(add_cmd_update_rankings)
 def run_cmd_update_rankings(cmds: commands) -> int:
     dir: str = os.path.abspath(cmds.args.dir[0])
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    assert os.path.isdir(dir), f"{dir} not an existing directory"
+    latest_dir: str = os.path.join(dir, "latest")
+    if not os.path.exists(latest_dir):
+        os.makedirs(latest_dir)
+    assert os.path.isdir(latest_dir), f"{latest_dir} not an existing directory"
     cmds.logger.info(f"save rankings to directory: {dir}")
     retries: int = min(cmds.args.retries[0], MAX_RETRIES)
     queue: Queue[domain_ranking] = Queue()
@@ -39,7 +40,7 @@ def run_cmd_update_rankings(cmds: commands) -> int:
         queue.put(domain_ranking(country))
     while not queue.empty():
         object = queue.get(block=False)
-        if not object.download(dir):
+        if not object.download(latest_dir):
             if retries > 0:
                 queue.put(object)
                 retries -= 1
