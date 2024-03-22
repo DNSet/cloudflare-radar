@@ -9,4 +9,4 @@ uninstall:
 	pip3 uninstall -y cloudflare-radar
 
 update-rankings:
-	cloudflare-radar update-rankings --dir rankings --retries 500 --stdout && git add rankings && git commit --message="update rankings $$(date '+%F %T')"
+	cloudflare-radar update-rankings --dir rankings --retries 500 --stdout --debug && git add rankings && git commit --message="update rankings $$(date '+%F %T')"

@@ -3,7 +3,7 @@
 from urllib.parse import urljoin
 
 __project__ = "cloudflare-radar"
-__version__ = "0.1"
+__version__ = "0.2"
 __description__ = "Get data from https://radar.cloudflare.com"
 __url_home__ = "https://github.com/DNSet/cloudflare-radar/"
 __url_code__ = __url_home__
