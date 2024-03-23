@@ -5,10 +5,8 @@ import os
 from typing import Any
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Union
 
-from xarg import commands
 from xarg import safile
 
 
@@ -35,25 +33,42 @@ class domain_name(object):
 
 class domain_database(dict[str, domain_name]):
 
-    def __init__(self, path: str):
+    def __init__(self):
         self.__updated: bool = False
-        self.__path: str = path
         self.__peak: int = 0
         super().__init__()
-        self.__load()
-
-    @property
-    def path(self) -> str:
-        return self.__path
 
     @property
     def peak(self) -> int:
         return self.__peak
 
-    def __add(self, object: domain_name):
+    @property
+    def updated(self) -> bool:
+        return self.__updated
+
+    @updated.setter
+    def updated(self, value: bool):
+        self.__updated = value
+
+    def add(self, object: domain_name):
         assert object.domain not in self, f"{object.domain} already exists"
         self.__peak = max(self.peak, object.number)
         self[object.domain] = object
+
+    def index(self, domain: str) -> int:
+        if domain not in self:
+            self.add(domain_name(number=self.peak + 1, domain=domain))
+            self.updated = True
+        assert domain in self, f"{domain} not exists"
+        return self[domain].number
+
+
+class domain_dbstore(domain_database):
+
+    def __init__(self, path: str):
+        self.__path: str = path
+        super().__init__()
+        self.__load()
 
     def __load(self):
         assert safile.restore(self.path), f"restore {self.path} failed"
@@ -62,10 +77,10 @@ class domain_database(dict[str, domain_name]):
         assert os.path.isfile(self.path), f"{self.path} not a regular file"
         with open(self.path) as rhdl:
             for line in csv.DictReader(rhdl):
-                self.__add(domain_name(**line))
+                self.add(domain_name(**line))
 
     def dump(self):
-        if not self.__updated:
+        if not self.updated:
             return
         assert safile.create_backup(self.path), \
             f"create {self.path} backup failed"
@@ -76,11 +91,8 @@ class domain_database(dict[str, domain_name]):
                 writer.writerow(item.dump())
         assert safile.delete_backup(self.path), \
             f"delete {self.path} backup failed"
-        self.__updated = False
+        self.updated = False
 
-    def index(self, domain: str) -> int:
-        self.__updated = True
-        if domain not in self:
-            self.__add(domain_name(number=self.peak + 1, domain=domain))
-        assert domain in self, f"{domain} not exists"
-        return self[domain].number
+    @property
+    def path(self) -> str:
+        return self.__path
