@@ -7,19 +7,28 @@ from typing import Optional
 from pycountry.db import Country
 from xarg import commands
 
+from .domains import domain_database
 from .request import download
 
 
-class domain_ranking(list[str]):
+class domain_ranking(dict[str, int]):
     PREFIX = "http://radar.cloudflare.com/charts/TopDomainsTable"
 
-    def __init__(self, location: Optional[Country] = None):
+    def __init__(self, location: Optional[Country] = None,
+                 database: Optional[domain_database] = None):
+        if database is None:
+            database = domain_database()
         self.__location: Optional[Country] = location
+        self.__database: domain_database = database
         super().__init__()
 
     @property
     def location(self) -> str:
         return self.__location.name if self.__location else "Worldwide"
+
+    @property
+    def database(self) -> domain_database:
+        return self.__database
 
     @property
     def url(self) -> str:
@@ -32,7 +41,9 @@ class domain_ranking(list[str]):
         self.clear()
         for line in sorted(csv.DictReader(open(path)),
                            key=lambda x: int(x["rank"])):
-            self.append(line["domain"])
+            domain: str = line["domain"]
+            assert domain not in self, f"{domain} already exists in {path}"
+            self[domain] = self.database.index(domain)
         return True
 
     def download(self, path: str) -> bool:

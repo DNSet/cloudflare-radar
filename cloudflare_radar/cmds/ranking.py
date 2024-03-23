@@ -10,7 +10,7 @@ from xarg import argp
 from xarg import commands
 from xarg import run_command
 
-from ..utils import domain_database
+from ..utils import domain_dbstore
 from ..utils import domain_ranking
 
 DEF_RETRIES: int = 100
@@ -34,13 +34,13 @@ def run_cmd_update_rankings(cmds: commands) -> int:
     if not os.path.exists(latest_dir):
         os.makedirs(latest_dir)
     assert os.path.isdir(latest_dir), f"{latest_dir} not an existing directory"
-    database = domain_database(os.path.join(dir, "domains.csv"))
+    database = domain_dbstore(os.path.join(dir, "domains.csv"))
     cmds.logger.info(f"save rankings to directory: {dir}")
     retries: int = min(cmds.args.retries[0], MAX_RETRIES)
     queue: Queue[domain_ranking] = Queue()
-    queue.put(domain_ranking())
+    queue.put(domain_ranking(database=database))
     for country in pycountry.countries:
-        queue.put(domain_ranking(country))
+        queue.put(domain_ranking(location=country, database=database))
     entry: List[domain_ranking] = list()
     while not queue.empty():
         object = queue.get(block=False)
@@ -49,10 +49,7 @@ def run_cmd_update_rankings(cmds: commands) -> int:
                 queue.put(object)
                 retries -= 1
             continue
+        cmds.logger.debug({k: v for k, v in object.items()})
         entry.append(object)
-        for name in object:
-            database.index(name)
     database.dump()
-    for item in entry:
-        cmds.logger.info({k: database.index(k) for k in item})
     return 0
