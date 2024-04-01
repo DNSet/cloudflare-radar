@@ -48,6 +48,8 @@ class domain_ranking(dict[str, int]):
 
     def download(self, path: str) -> bool:
         filepath: Optional[str] = download(url=self.url, path=path)
-        status: str = "success" if isinstance(filepath, str) else "failed"
-        commands().logger.debug(f"download {self.url} {status}")
+        if isinstance(filepath, str):
+            commands().logger.info(f"download {self.url} success")
+        else:
+            commands().logger.warn(f"download {self.url} failed")
         return self.load(filepath) if isinstance(filepath, str) else False
